@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  express-rest-demo-helm:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-11-08T15:58:14.943851501Z"
+    description: A Helm chart for Express REST API demo
+    digest: 96d8151122072f159f0ad75be08a1f7ebfa803febf292ac6a243cd54a5423ad4
+    name: express-rest-demo-helm
+    type: application
+    urls:
+    - https://github.com/nikhildhole/express-rest-demo-helm/releases/download/express-rest-demo-helm-0.1.2/express-rest-demo-helm-0.1.2.tgz
+    version: 0.1.2
+generated: "2025-11-08T15:58:14.94385609Z"
