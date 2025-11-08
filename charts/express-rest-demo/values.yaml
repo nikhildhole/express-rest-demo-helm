@@ -4,3 +4,8 @@ image:
   repository: nikhildhole/express-rest-demo
   tag: "latest"
   pullPolicy: IfNotPresent
+
+service:
+  type: NodePort
+  port: 3000
+  targetPort: 3000
