@@ -1,6 +1,0 @@
-replicaCount: 1
-
-image:
-  repository: nikhildhole/express-rest-demo
-  tag: "latest"
-  pullPolicy: IfNotPresent
