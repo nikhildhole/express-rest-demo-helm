@@ -1,3 +1,6 @@
+nameOverride: "express-rest-demo"
+fullnameOverride: "express-rest-demo"
+
 replicaCount: 1
 
 image:
@@ -9,3 +12,69 @@ service:
   type: NodePort
   port: 3000
   targetPort: 3000
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsUser: 1000               # All containers run as this user
+  runAsGroup: 3000              # Group ID
+  fsGroup: 2000                 # Files created will belong to this group
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 500Mi
+  requests:
+    cpu: 500m
+    memory: 500Mi
+
+volumes: []
+# - name: foo
+#   secret:
+#     secretName: mysecret
+#     optional: false
+
+# Additional volumeMounts on the output Deployment definition.
+volumeMounts: []
+# - name: foo
+#   mountPath: "/etc/foo"
+#   readOnly: true
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+serviceAccount:
+  create: true
+  automount: false
+  annotations: {}
+  name: ""

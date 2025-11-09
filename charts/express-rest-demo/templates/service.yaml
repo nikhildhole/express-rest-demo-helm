@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: "express-rest-demo-helm"
+  name: {{ include "express-rest-demo-helm.fullname" . }}
   labels:
-    app: "express-rest-demo-helm"
+    {{- include "express-rest-demo-helm.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -12,4 +12,4 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app: "express-rest-demo-helm"
+    {{- include "express-rest-demo-helm.labels" . | nindent 4 }}

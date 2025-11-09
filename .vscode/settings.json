@@ -1,11 +1,11 @@
 {
   // Keep YAML language mode
   "[yaml]": {
-    "editor.formatOnSave": false
+    "editor.formatOnSave": false,
   },
-
   // Optional: keep color themes active for YAML
   "files.associations": {
-    "*.tpl": "helm-template"
-  }
+    "*.tpl": "helm-template",
+  },
+  "yaml.validate": false,
 }
