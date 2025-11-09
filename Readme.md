@@ -99,7 +99,7 @@ helm repo update
 ### 2️⃣ Install the chart
 
 ```bash
-helm install express-demo express-rest-demo/express-rest-demo \
+helm install express-demo express-rest-demo/express-rest-demo-helm \
   --namespace default --create-namespace
 ```
 
