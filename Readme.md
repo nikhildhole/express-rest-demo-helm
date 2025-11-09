@@ -1,155 +1,220 @@
-# Express REST Demo Helm Chart
+# 🚀 Express REST Demo Helm Chart
 
-## Overview
+A Helm chart for deploying the **Express REST Demo** application to Kubernetes.
+This chart creates a Deployment, Service, Horizontal Pod Autoscaler, and ServiceAccount.
 
-This repository contains a Helm chart for deploying the Express REST Demo application.
+---
 
-The chart is located at `charts/express-rest-demo` and includes Kubernetes manifests for Deployment, Service, HPA, ServiceAccount and related templates.
+## 🧩 Chart Overview
 
-This README explains how to install, upgrade, and test the chart locally (Minikube) and how to inspect or customize values.
+| Resource              | Purpose                                    |
+| --------------------- | ------------------------------------------ |
+| `deployment.yaml`     | Deploys the Express app container          |
+| `service.yaml`        | Exposes the app internally or externally   |
+| `hpa.yaml`            | Configures autoscaling                     |
+| `serviceaccount.yaml` | Manages Kubernetes permissions for the pod |
+| `_helpers.tpl`        | Contains template helper functions         |
+| `NOTES.txt`           | Shows install output after `helm install`  |
 
-## Prerequisites
+---
 
-- Helm 3.x installed: https://helm.sh/docs/intro/install/
-- Kubernetes cluster (Minikube or any conformant cluster)
-- Optional: `kubectl` configured to talk to the target cluster
+## ⚙️ Default Configuration (`values.yaml`)
 
-## Quick install (local)
+```yaml
+nameOverride: "express-rest-demo"
+fullnameOverride: "express-rest-demo"
 
-From the repository root you can install the chart directly from the local `charts/express-rest-demo` folder.
+replicaCount: 1
 
-1. Start a cluster (Minikube example):
+image:
+  repository: nikhildhole/express-rest-demo
+  tag: "latest"
+  pullPolicy: IfNotPresent
 
-```bash
-minikube start
+service:
+  type: NodePort
+  port: 3000
+  targetPort: 3000
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsUser: 1000
+  runAsGroup: 3000
+  fsGroup: 2000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 500Mi
+  requests:
+    cpu: 500m
+    memory: 500Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+serviceAccount:
+  create: true
+  automount: false
+  annotations: {}
+  name: ""
 ```
 
-2. Install the chart:
+---
+
+## 🛠 Installation
+
+### 1️⃣ Add the Helm repo
 
 ```bash
-# install with release name `express-demo`
-helm install express-demo charts/express-rest-demo \
-	--namespace default --create-namespace
+helm repo add express-rest-demo https://nikhildhole.github.io/express-rest-demo-helm/
+helm repo update
 ```
 
-3. Verify resources were created:
+### 2️⃣ Install the chart
+
+```bash
+helm install express-demo express-rest-demo/express-rest-demo \
+  --namespace default --create-namespace
+```
+
+### 3️⃣ Verify
 
 ```bash
 kubectl get all -l app.kubernetes.io/instance=express-demo
 ```
 
-4. View the application (if Service is NodePort or LoadBalancer):
+---
 
-```bash
-# for minikube, open the service in the browser
-minikube service express-demo --namespace default
-```
+## 🌐 Access the Service
 
-## Upgrade / Uninstall
+The chart uses **NodePort** by default (port `3000`).
 
-Upgrade using:
+- On **Minikube**:
 
-```bash
-helm upgrade express-demo charts/express-rest-demo -n default
-```
+  ```bash
+  minikube service express-rest-demo --url
+  ```
 
-Uninstall and remove resources:
+- On a **cloud cluster (EKS/GKE/AKS)**, change the service type to `LoadBalancer`:
 
-```bash
-helm uninstall express-demo -n default
-```
-
-## Lint, Template, and Dry-run
-
-Check the chart for common issues and render templates locally:
-
-```bash
-helm lint charts/express-rest-demo
-helm template express-demo charts/express-rest-demo --values charts/express-rest-demo/values.yaml
-```
-
-To perform a dry-run install:
-
-```bash
-helm install --dry-run --debug express-demo charts/express-rest-demo
-```
-
-## Values (summary)
-
-The chart exposes common configuration via `values.yaml`. Important keys typically include:
-
-- image.repository: container image repository (default: your express app image)
-- image.tag: image tag to deploy
-- replicaCount: desired number of replicas
-- service.type: ClusterIP/NodePort/LoadBalancer
-- service.port: port the service exposes
-- resources: CPU/memory requests and limits
-- hpa.enabled / hpa.minReplicas / hpa.maxReplicas: horizontal pod autoscaler settings
-
-Edit `charts/express-rest-demo/values.yaml` or pass `--set` to `helm install` to customize these values.
-
-Example overriding image and replicas:
-
-```bash
-helm install express-demo charts/express-rest-demo \
-	--set image.repository=myrepo/express-demo --set image.tag=1.2.3 --set replicaCount=3
-```
-
-## Templates overview
-
-The chart templates are in `charts/express-rest-demo/templates/`. Typical files you will find:
-
-- `deployment.yaml` - Deployment definition for the Express application
-- `service.yaml` - Service exposing the deployment
-- `hpa.yaml` - HorizontalPodAutoscaler (if enabled)
-- `serviceaccount.yaml` - ServiceAccount used by the application
-- `_helpers.tpl` - Template helper functions used across templates
-- `NOTES.txt` - Post-install notes shown by Helm
-
-Open these files to see the full resource spec and which values are used.
-
-## Testing & Verification
-
-After install, verify pods, services and HPA:
-
-```bash
-kubectl get pods -l app.kubernetes.io/instance=express-demo
-kubectl get svc -l app.kubernetes.io/instance=express-demo
-kubectl get hpa -l app.kubernetes.io/instance=express-demo
-kubectl logs -l app.kubernetes.io/instance=express-demo --tail=100
-```
-
-If you need to exec into a pod for debugging:
-
-```bash
-POD=$(kubectl get pods -l app.kubernetes.io/instance=express-demo -o jsonpath='{.items[0].metadata.name}')
-kubectl exec -it $POD -- /bin/sh
-```
-
-## Common troubleshooting
-
-- Image pull failures: ensure `image.repository`/`image.tag` are correct and the image registry credentials (if private) are configured.
-- RBAC issues: check the `serviceaccount` and any Role/ClusterRole templates if your application requires cluster permissions.
-- Service not reachable: confirm `service.type` and the selected port; use `kubectl describe svc <name>` to inspect endpoints.
-
-## Development notes
-
-- To iterate locally, update the image and redeploy, or use `helm upgrade` after building/pushing a new image.
-- Use `helm template` to inspect rendered manifests before applying them.
-
-## Contributing
-
-See `CONTRIBUTING.md` for contribution guidelines.
-
-## License
-
-This repository does not include a license file. Add one if you intend to make this project open-source.
+  ```bash
+  helm upgrade express-demo express-rest-demo/express-rest-demo \
+    --set service.type=LoadBalancer
+  ```
 
 ---
 
-If you'd like, I can also:
+## 🧩 Customize Values
 
-- Add a short `values.example.yaml` showing the most commonly overridden values
-- Add a tiny `Makefile` with common commands (install, upgrade, lint)
+Override settings without editing the chart:
 
-Tell me which follow-up you'd prefer.
+```bash
+helm install express-demo express-rest-demo/express-rest-demo \
+  --set image.tag=v1.0.1 \
+  --set replicaCount=2 \
+  --set service.type=LoadBalancer
+```
+
+Or create your own file `my-values.yaml` and use:
+
+```bash
+helm install express-demo express-rest-demo/express-rest-demo -f my-values.yaml
+```
+
+---
+
+## 🧪 Test, Lint, and Debug
+
+```bash
+# Validate the chart
+helm lint express-rest-demo/express-rest-demo
+
+# Render templates locally
+helm template express-demo express-rest-demo/express-rest-demo
+
+# Dry-run an install
+helm install express-demo express-rest-demo/express-rest-demo --dry-run --debug
+```
+
+---
+
+## 🔄 Upgrade & Uninstall
+
+```bash
+# Upgrade after making changes
+helm upgrade express-demo express-rest-demo/express-rest-demo
+
+# Uninstall completely
+helm uninstall express-demo
+```
+
+---
+
+## 📊 Autoscaling (HPA)
+
+The chart includes an optional Horizontal Pod Autoscaler (HPA):
+
+| Setting                                         | Default |
+| ----------------------------------------------- | ------- |
+| `autoscaling.enabled`                           | `true`  |
+| `autoscaling.minReplicas`                       | `1`     |
+| `autoscaling.maxReplicas`                       | `100`   |
+| `autoscaling.targetCPUUtilizationPercentage`    | `80`    |
+| `autoscaling.targetMemoryUtilizationPercentage` | `80`    |
+
+Disable it if you don’t want autoscaling:
+
+```bash
+helm install express-demo express-rest-demo/express-rest-demo \
+  --set autoscaling.enabled=false
+```
+
+---
+
+## 🧾 Security Context
+
+By default, containers:
+
+- Run as a **non-root** user (`runAsUser: 1000`)
+- Use a **read-only root filesystem**
+- Drop **all Linux capabilities**
+- Use a **RuntimeDefault seccomp profile**
+
+These settings make the deployment **Pod Security Standard (restricted)** compliant.
+
+---
+
+## 🧹 Cleanup
+
+```bash
+helm uninstall express-demo
+kubectl delete namespace default
+```
+
+---
